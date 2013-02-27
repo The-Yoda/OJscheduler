@@ -14,12 +14,12 @@ trait Rest {
 
         $cGetPostDefault = function (GenModel $request) {
             $method = $request->getAction();
-
             if (!method_exists($this, $method)){
                 throw GenericExceptionFactory::getException('ERR_API_1002');
             }
             try {
-                $oVars = $request->getRequest();
+				$oVars = $request->getRequest();
+				$oVars->setSite($request->getSite());
                 return $this->buildResponse($this->$method($oVars));
             } catch (Exception $e) {
                 throw GenericExceptionFactory::getException('ERR_API_1002');
