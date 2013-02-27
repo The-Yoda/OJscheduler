@@ -13,7 +13,7 @@ class ClassLoader {
     }
 
     static function getScanPaths() {
-        $aScanDirs = array('api', 'lib');
+        $aScanDirs = array('api', 'lib', 'GenericmodelFramework');
 
         $aLoadPaths = array();
         foreach ($aScanDirs as $dir) {
