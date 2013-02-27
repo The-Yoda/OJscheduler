@@ -1,20 +1,14 @@
 <?php
 //define("VENDOR_PATH", __DIR__ . "/../../thirdpartylib/");
 require VENDOR_PATH . "domparser/simple_html_dom.php";
-//$a = new Topcoder();
-//var_dump($a->getSchedule(array("Srm")), "PST", 10);
-
-//var_dump($a->toTimeZone("Asia/Kolkata", "2013-02-06 23:00:00"));
 
 class Topcoder{
 
 	public function getSchedule($aContestNames, $timeZone, $limit){
-//		echo "JDJFDK";print_r( $aContestNames);
 //		$aContestNames = $oContestNames->asArray();
 		foreach ($aContestNames as $contestName){
 			$aContests[$contestName] = self::{"parse" . $contestName}($timeZone, $limit);
 		}
-		//print_r($aContests);
 		return $aContests;
 	}
 
@@ -29,7 +23,6 @@ class Topcoder{
 			foreach ($result->find('option') as $option)
 				$availableMonths[] = $option->value;
 		}
-var_dump($availableMonths);
 		$currentMonthIndex = array_search($currentMonthYear, $availableMonths);
 		$aSchedule = array();
 		for ($month = $currentMonthIndex; $month < sizeof($availableMonths); $month++)
@@ -52,7 +45,6 @@ var_dump($availableMonths);
 	}
 	
 	 function convertTo($timeZone, $aUTCSchedule){
-		//		return $aUTCSchedule;
 		$aSchedule['RegistrationTime'] = self::toTimeZone($timeZone, $aUTCSchedule['RegistrationTime']);
 		$aSchedule['ContestTime'] = self::toTimeZone($timeZone, $aUTCSchedule['ContestTime']); 
 		return $aSchedule;		
@@ -95,7 +87,6 @@ var_dump($availableMonths);
 		$contestTime = self::formatTime($datetime[2]);
 		$aSchedule['RegistrationTime'] = date('Y-m-d H:i:s',strtotime($date . ' ' . $registrationTime . ' ' . $timezone));
 		$aSchedule['ContestTime'] = date('Y-m-d H:i:s',strtotime($date . ' ' . $contestTime . ' ' . $timezone));
-		//	echo toTimeZone("Asia/Kolkata", $aSchedule['ContestTime']);
 		return $aSchedule;
 	}
 
