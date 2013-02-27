@@ -15,24 +15,31 @@ class RequestManager{
 
         foreach ($aData as $sKey => $sValue) {
             $oRequest->{'set'.$sKey}(ObjectFactory::getGenModelInstance($sKey, $sValue, true));
-        }
-
-        $oRequest->setClass(self::getClassName($oRequest->getUrl()));
-        $oRequest->setAction(self::getMethodName($oRequest->getUrl()));
+		}
+		$aParsedUrl = self::parseUrl($oRequest->getUrl());
+		$oRequest->setClass(self::getClassName($aParsedUrl));
+		$oRequest->setSite(self::getSiteName($aParsedUrl));
+        $oRequest->setAction(self::getMethodName($aParsedUrl));
         $oRequest->setMethod(strtolower($oRequest->getServer()->getRequestMethod()));
         return $oRequest;
+	}
+
+	private static function parseUrl($sUrl){
+        $aParsedUrl = parse_url($sUrl);
+		$arr = explode("/", $aParsedUrl['path']);
+		return $arr;
+	}
+
+	private static function getSiteName($aParsedUrl){
+		return $aParsedUrl[2];
+	}
+
+    private static function getClassName($aParsedUrl) {
+        return $aParsedUrl[1];
     }
 
-    private static function getClassName($sUrl) {
-        $aParsedUrl = parse_url($sUrl);
-        $arr = explode("/", $aParsedUrl['path']);
-        return $arr[3];
-    }
-
-    private static function getMethodName($sUrl) {
-        $aParsedUrl = parse_url($sUrl);
-        $arr = explode("/", $aParsedUrl['path']);
-        return $arr[4];
+    private static function getMethodName($aParsedUrl) {
+        return $aParsedUrl[3];
     }
 }
 ?>
