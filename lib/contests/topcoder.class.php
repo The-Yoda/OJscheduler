@@ -1,18 +1,22 @@
 <?php
 //define("VENDOR_PATH", __DIR__ . "/../../thirdpartylib/");
 require VENDOR_PATH . "domparser/simple_html_dom.php";
-
+//var_dump($tc->updateContestSchedule());
 class Topcoder{
-
-	public function getSchedule($aContestNames, $timeZone, $limit){
+	use Config;
+	public function getSchedule($aContestNames, $timeZone, $limit = 0){
 //		$aContestNames = $oContestNames->asArray();
 		foreach ($aContestNames as $contestName){
-			$aContests[$contestName] = self::{"parse" . $contestName}($timeZone, $limit);
+			$aContests[$contestName] = $this->convertSrmTo($timeZone, self::conf($contestName), $limit);
 		}
 		return $aContests;
 	}
+	
+	public function updateContestSchedule(){
+		return $this->parseSrm();	
+	}
 
-	public function parseSrm($timeZone, $limit) {
+	private function parseSrm() {
 		$year = self::getFormattedCurrentYear();
 		$month = self::getFormattedCurrentMonth();
 		$currentMonthYear = $month . '_' . $year;
@@ -35,19 +39,25 @@ class Topcoder{
 					foreach ($div->find('strong') as $strong)
 					{
 						foreach ($strong->find('a') as $a) {
-							$aUTCSchedule = self::parseFromLink($a);
-							$aSchedule [$a->innertext] = self::convertTo($timeZone, $aUTCSchedule);
+							$aUTCTime = self::parseFromLink($a);
+							if ($aUTCTime != null) {
+								$aSchedule [$a->innertext] = $aUTCTime;
+							}
 						}
 					}
 			}
 		}
-		return $aSchedule;
+		$oSchedule = ObjectFactory::getGenModelInstance("srm", $aSchedule);
+		return self::writeConf($oSchedule, 'srm');
 	}
 	
-	 function convertTo($timeZone, $aUTCSchedule){
-		$aSchedule['RegistrationTime'] = self::toTimeZone($timeZone, $aUTCSchedule['RegistrationTime']);
-		$aSchedule['ContestTime'] = self::toTimeZone($timeZone, $aUTCSchedule['ContestTime']); 
-		return $aSchedule;		
+	private function convertSrmTo($toTimeZone, $oUTCSchedule){
+		$aUTCSchedule = $oUTCSchedule->asArray();
+		foreach ($aUTCSchedule as $srm => $aSchedule){
+			$aUTCSchedule[$srm]['registrationtime'] = self::toTimeZone($toTimeZone, $aSchedule['registrationtime']);
+			$aUTCSchedule[$srm]['contesttime'] = self::toTimeZone($toTimeZone, $aSchedule['contesttime']); 
+		}
+	return $aUTCSchedule;
 	}
 
 	private function parseFromLink($a){
@@ -65,7 +75,7 @@ class Topcoder{
 		return self::getUTCTime($aSchedule);
 	}
 
-	function toTimeZone($timeZone, $dateTime){
+	private function toTimeZone($timeZone, $dateTime){
 		$utc_date = DateTime::createFromFormat(
 			'Y-m-d H:i:s', 
 			$dateTime, 
@@ -85,6 +95,9 @@ class Topcoder{
 		$timezone = $datetime[1][2];
 		$registrationTime = self::formatTime($datetime[1]);
 		$contestTime = self::formatTime($datetime[2]);
+		if (time() > strtotime($date . ' ' . $contestTime . ' ' . $timezone)) {
+			return null;
+		}
 		$aSchedule['RegistrationTime'] = date('Y-m-d H:i:s',strtotime($date . ' ' . $registrationTime . ' ' . $timezone));
 		$aSchedule['ContestTime'] = date('Y-m-d H:i:s',strtotime($date . ' ' . $contestTime . ' ' . $timezone));
 		return $aSchedule;
