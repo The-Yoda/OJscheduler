@@ -1,17 +1,20 @@
 <?php
 //define("VENDOR_PATH", __DIR__ . "/../../thirdpartylib/");
 require VENDOR_PATH . "domparser/simple_html_dom.php";
+//$tc = new Topcoder();
 //var_dump($tc->updateContestSchedule());
 class Topcoder{
 	use Config;
 	public function getSchedule($aContestNames, $timeZone, $limit = 0){
 //		$aContestNames = $oContestNames->asArray();
+//		$this->parseSrm();
 		foreach ($aContestNames as $contestName){
 			$aContests[$contestName] = $this->convertSrmTo($timeZone, self::conf($contestName), $limit);
 		}
 		return $aContests;
 	}
-	
+
+	// call this class from curl cron job
 	public function updateContestSchedule(){
 		return $this->parseSrm();	
 	}
@@ -47,6 +50,7 @@ class Topcoder{
 					}
 			}
 		}
+//		var_dump($aSchedule); //debug
 		$oSchedule = ObjectFactory::getGenModelInstance("srm", $aSchedule);
 		return self::writeConf($oSchedule, 'srm');
 	}
