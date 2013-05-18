@@ -19,7 +19,6 @@ trait Rest {
             }
             try {
 				$oVars = $request->getRequest();
-				$oVars->setSite($request->getSite());
                 return $this->buildResponse($this->$method($oVars));
             } catch (Exception $e) {
                 throw GenericExceptionFactory::getException('ERR_API_1002');

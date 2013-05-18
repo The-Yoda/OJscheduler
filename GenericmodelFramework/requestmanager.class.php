@@ -18,7 +18,7 @@ class RequestManager{
 		}
 		$aParsedUrl = self::parseUrl($oRequest->getUrl());
 		$oRequest->setClass(self::getClassName($aParsedUrl));
-		$oRequest->setSite(self::getSiteName($aParsedUrl));
+//		$oRequest->setSite(self::getSiteName($aParsedUrl));
         $oRequest->setAction(self::getMethodName($aParsedUrl));
         $oRequest->setMethod(strtolower($oRequest->getServer()->getRequestMethod()));
         return $oRequest;
@@ -30,16 +30,16 @@ class RequestManager{
 		return $arr;
 	}
 
-	private static function getSiteName($aParsedUrl){
+/*	private static function getSiteName($aParsedUrl){
 		return $aParsedUrl[2];
 	}
-
+*/
     private static function getClassName($aParsedUrl) {
         return $aParsedUrl[1];
     }
 
     private static function getMethodName($aParsedUrl) {
-        return $aParsedUrl[3];
+        return $aParsedUrl[2];
     }
 }
 ?>

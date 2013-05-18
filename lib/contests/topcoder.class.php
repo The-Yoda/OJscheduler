@@ -6,7 +6,6 @@ require VENDOR_PATH . "domparser/simple_html_dom.php";
 class Topcoder{
 	use Config;
 	public function getSchedule($aContestNames, $timeZone, $limit = 0){
-//		$aContestNames = $oContestNames->asArray();
 //		$this->parseSrm();
 		foreach ($aContestNames as $contestName){
 			$aContests[$contestName] = $this->convertSrmTo($timeZone, self::conf($contestName), $limit);
