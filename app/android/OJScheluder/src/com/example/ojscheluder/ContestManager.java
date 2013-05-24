@@ -1,5 +1,6 @@
 package com.example.ojscheluder;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 
@@ -7,16 +8,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.provider.CalendarContract.Events;
-import android.provider.CalendarContract.Reminders;
 import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -49,49 +40,86 @@ public class ContestManager {
 	};
 
 	void setCalendarEvent(JSONObject jSchedule) {
-		
-		Iterator<String> keys = (Iterator<String>) jSchedule.keys();
-		while (keys.hasNext()) {
-			String contestName = keys.next();
-			try {
-				JSONObject contests = jSchedule.getJSONObject(contestName);
-				Iterator<String> iContests = (Iterator<String>) contests.keys();
-				while (iContests.hasNext()) {
-					String contest = iContests.next();
-					JSONObject cSchedule = jSchedule.getJSONObject(contest);
-					
-				}
-			} catch (JSONException e) {
-					e.printStackTrace();
-			}
-		}		
+		try {
+			String contesttime = jSchedule.getString("contesttime");
+			String registrationtime = jSchedule.getString("registrationtime");
+			
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 		calMgr.createCalendarEntry("scheduler",
 				"Registration is gonna start now", "topcoder",
 				System.currentTimeMillis() + 100000,
 				System.currentTimeMillis() + 2000000, false, true, 60);
 	}
 
+	JSONObject updateScheduleData(JSONObject oSchedule, JSONObject nSchedule,
+			boolean isNewSchedule) {
+		Iterator<String> iNewSchedule = nSchedule.keys();
+		while (iNewSchedule.hasNext()) {
+			String sContestType = iNewSchedule.next();
+			try {
+				JSONObject jNewContests = nSchedule.getJSONObject(sContestType);
+				JSONObject jOldContests = null;
+				if (!isNewSchedule) {
+					if (!(isNewSchedule = oSchedule.isNull(sContestType))) {
+						jOldContests = oSchedule.getJSONObject(sContestType);
+					}
+				}
+				Iterator<String> iContests = jNewContests.keys();
+				while (iContests.hasNext()) {
+					String contest = iContests.next();
+					JSONObject nContestSchedule = jNewContests
+							.getJSONObject(contest);
+					JSONObject oContestSchedule = null;
+					int eventId;
+					boolean needCrossCheck = !isNewSchedule;
+					if (!isNewSchedule) {
+						if (jOldContests.isNull(contest)) {
+							needCrossCheck = false;
+						} else {
+							oContestSchedule = jOldContests
+									.getJSONObject(contest);
+						}
+					}
+					if (needCrossCheck
+							&& isScheduleChanged(nContestSchedule,
+									oContestSchedule)) {
+						// updateCalendarEvent();
+					} else {
+						setCalendarEvent(nContestSchedule);
+					}
+				}
+				return nSchedule; // check whether updated or not
+
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return null;
+	}
+
 	private boolean processContestSchedule(String sSchedule) {
 		try {
 			JSONObject jSchedule = new JSONObject(sSchedule);
-			Iterator<String> keys = (Iterator<String>) jSchedule.keys();
+			Iterator<String> keys = jSchedule.keys();
 			while (keys.hasNext()) {
 				String site = keys.next();
 				String file = site + ".json";
 				JSONObject nSchedule = jSchedule.getJSONObject(site);
 				JSONObject oSchedule = StorageManager.getData("contests", file);
+				boolean isNewSchedule = false;
 				if (oSchedule == null) {
-					if (!StorageManager.writeData(nSchedule, "contests", file)) {
-						return false;
-					}
-				} else {
-
-					if (isScheduleChanged(oSchedule, nSchedule)) {
-						
-					}
+					isNewSchedule = true;
+				}
+				JSONObject updatedSchedule = updateScheduleData(nSchedule,
+						oSchedule, isNewSchedule);
+				if (!StorageManager
+						.writeData(updatedSchedule, "contests", file)) {
+					return false;
 				}
 
-				
 			}
 			// need to write in such a way that it'll work for all
 			// sites(iterate it)
@@ -111,8 +139,18 @@ public class ContestManager {
 	}
 
 	private boolean isScheduleChanged(JSONObject oSchedule, JSONObject nSchedule) {
-		// TODO Auto-generated method stub
-		return false;
+		try {
+			if ((nSchedule.getString("contesttime")).equals(oSchedule
+					.getString("contesttime"))) {
+				if ((nSchedule.getString("registrationtime")).equals(oSchedule
+						.getString("registrationtime"))) {
+					return false;
+				}
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return true;
 	}
 
 	public void updateSchedule(JSONObject contests, String baseUrl) {
