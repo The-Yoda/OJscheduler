@@ -1,5 +1,6 @@
 package com.example.ojscheluder;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
@@ -41,16 +42,31 @@ public class ContestManager {
 
 	void setCalendarEvent(JSONObject jSchedule) {
 		try {
-			String contesttime = jSchedule.getString("contesttime");
-			String registrationtime = jSchedule.getString("registrationtime");
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
+			String sContestTime = jSchedule.getString("contesttime");
+			String sRegistrationTime = jSchedule.getString("registrationtime");
+			SimpleDateFormat format = new SimpleDateFormat(
+					"yyyy-MM-dd HH:mm:ss");
+			long lContestTime = format.parse(sContestTime).getTime();
+			long lRegistrationTime = format.parse(sRegistrationTime).getTime();
+			long totalRegistrationTime = 3 * 60; // 3 hours to min
+			long totalContestTime = 60 + 45; // 1:45 hours to min
+			Log.e("contest time", "" + sContestTime);
+			Log.e("registration time", "" + lRegistrationTime);
+			if (System.currentTimeMillis() < lRegistrationTime) {
+			calMgr.createCalendarEntry("scheduler",
+					"Registration is gonna start now", "topcoder",
+					lRegistrationTime, lRegistrationTime
+							+ totalRegistrationTime * 60 * 1000, false, true,
+					(int) totalRegistrationTime);
+			calMgr.createCalendarEntry("scheduler",
+					"contest is gonna start now", "topcoder", lContestTime,
+					lContestTime + +totalContestTime * 60 * 1000, false, true,
+					(int) totalContestTime);
+			}
+
+		} catch (Exception e) {
+			System.out.println(e);
 		}
-		calMgr.createCalendarEntry("scheduler",
-				"Registration is gonna start now", "topcoder",
-				System.currentTimeMillis() + 100000,
-				System.currentTimeMillis() + 2000000, false, true, 60);
 	}
 
 	JSONObject updateScheduleData(JSONObject oSchedule, JSONObject nSchedule,
